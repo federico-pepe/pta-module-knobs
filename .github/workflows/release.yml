@@ -1,0 +1,29 @@
+name: release
+
+# Fires only on a version tag push. This module has no per-OS binary (it's
+# a Node.js script — the same tarball runs everywhere Node is on PATH), so
+# there's no build matrix: just package manifest.json + run.js + palette.json
+# into the one archive push-tethered-app's catalog.json's asset_name names,
+# and attach it to a GitHub Release named after the tag.
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build tarball
+        run: tar -czf knobs-js.tar.gz manifest.json run.js palette.json
+
+      - name: Create release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: knobs-js.tar.gz
